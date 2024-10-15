@@ -1,24 +1,69 @@
 package main
 
 import (
-  "fmt"
+	"chatApp/shared"
+	"fmt"
+	"github.com/gorilla/websocket"
+	"log"
+	"net/http"
+)
+
+var (
+	upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin:     func(r *http.Request) bool { return true },
+	}
+	chat_broadcast       = make(chan shared.Message)
+	persist_broadcast    = make(chan shared.Message)
+	historical_broadcast = make(chan shared.Message)
+	clients              = make(map[string]*websocket.Conn)
 )
 
 //TIP To run your code, right-click the code and select <b>Run</b>. Alternatively, click
 // the <icon src="AllIcons.Actions.Execute"/> icon in the gutter and select the <b>Run</b> menu item from here.
 
 func main() {
-  //TIP Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined or highlighted text
-  // to see how GoLand suggests fixing it.
-  s := "gopher"
-  fmt.Println("Hello and welcome, %s!", s)
+	//TIP Press <shortcut actionId="ShowIntentionActions"/> when your caret is at the underlined or highlighted text
+	// to see how GoLand suggests fixing it.
+	s := "gopher"
+	fmt.Println("Hello and welcome, %s!", s)
 
-  for i := 1; i <= 5; i++ {
-	//TIP You can try debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-	// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>. To start your debugging session, 
-	// right-click your code in the editor and select the <b>Debug</b> option. 
-	fmt.Println("i =", 100/i)
-  }
+	for i := 1; i <= 5; i++ {
+		//TIP You can try debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
+		// for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>. To start your debugging session,
+		// right-click your code in the editor and select the <b>Debug</b> option.
+		fmt.Println("i =", 100/i)
+	}
+}
+
+func handleConnections(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+
+	if err != nil {
+		log.Println(err)
+
+		return
+	}
+
+	defer conn.Close()
+
+	for {
+		var msg shared.Message
+		err := conn.ReadJSON(&msg)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		if msg.Type == "new_client" {
+
+		} else if msg.Type == "message" {
+			chat_broadcast <- msg
+			persist_broadcast <- msg
+		} else {
+			log.Println("Unknown message:", msg.Type)
+		}
+	}
 }
 
 //TIP See GoLand help at <a href="https://www.jetbrains.com/help/go/">jetbrains.com/help/go/</a>.
