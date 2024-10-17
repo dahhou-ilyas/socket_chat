@@ -2,7 +2,6 @@ package main
 
 import (
 	"chatApp/shared"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -44,10 +43,16 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if msg.Type == "new_client" {
-
+			if addNewUser(msg, conn) {
+				go readAllMessagesFromRPC(msg.Sender)
+			}
 		} else if msg.Type == "chat" {
 			chat_broadcast <- msg
 			persist_broadcast <- msg
+		} else if msg.Type == "session_end" {
+
+			go removeClient(msg.Sender)
+
 		} else {
 			log.Println("Unknown message:", msg.Type)
 		}
@@ -177,17 +182,5 @@ func main() {
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("error in listen server 8080", err)
-	}
-}
-
-func test1() {
-	for i := 0; i < 1111; i++ {
-		fmt.Println("test1 :", i)
-	}
-}
-
-func test2() {
-	for i := 0; i < 222; i++ {
-		fmt.Println("test2 :", i)
 	}
 }
