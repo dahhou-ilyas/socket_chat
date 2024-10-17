@@ -4,6 +4,9 @@ import (
 	"chatApp/shared"
 	"encoding/json"
 	"log"
+	"net"
+	"net/http"
+	"net/rpc"
 	"os"
 )
 
@@ -39,4 +42,16 @@ func (t *MessageRPCServer) PersistMessage(msg shared.Message, reply *string) err
 
 func main() {
 
+	messageRPC := new(MessageRPCServer)
+
+	rpc.Register(messageRPC)
+	rpc.HandleHTTP()
+
+	port := ":1123"
+	listener, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatal("listen error: ", err)
+	}
+
+	http.Serve(listener, nil)
 }
