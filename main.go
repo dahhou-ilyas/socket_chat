@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"net/rpc"
 	"sync"
 	"time"
 )
@@ -108,6 +109,28 @@ func handleHistoricMessage() {
 				delete(clients, msg.Receiver)
 			}
 		}
+	}
+}
+
+func forwardMessagesToRPC() {
+	for {
+		msg := <-persist_broadcast
+		client, err := rpc.DialHTTP("tcp", "localhost:1123")
+
+		if err != nil {
+			log.Println("Failed to connect to RPC server:", err)
+			continue
+		}
+		defer client.Close()
+
+		var reply string
+		err = client.Call("MessageRPCServer.PersistMessage", msg, &reply)
+		if err != nil {
+			log.Println("Failed to persist message:", err)
+			continue
+		}
+		log.Println("RPC service response:", reply)
+
 	}
 }
 
