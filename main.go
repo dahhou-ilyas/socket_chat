@@ -95,6 +95,21 @@ func handleChatMessages() {
 	}
 }
 
+func handleHistoricMessage() {
+	for {
+		msg := <-historical_broadcast
+
+		if conn, ok := clients[msg.Receiver]; ok {
+			err := conn.WriteJSON(msg)
+			if err != nil {
+				log.Println(err)
+				conn.Close()
+				delete(clients, msg.Receiver)
+			}
+		}
+	}
+}
+
 func removeClient(clientID string) {
 	delete(clients, clientID)
 	log.Printf("Client '%s' removed\n", clientID)
