@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"time"
 )
 
 var (
@@ -49,6 +50,30 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Println("Unknown message:", msg.Type)
 		}
+	}
+}
+
+func addNewUser(msg shared.Message, conn *websocket.Conn) bool {
+	clientID := msg.Text
+
+	if _, exists := clients[clientID]; exists {
+		log.Println("Already exists client:", clientID)
+
+		err := conn.WriteJSON(shared.Message{
+			Text:      "User already exists",
+			Sender:    "server",
+			Receiver:  clientID,
+			Type:      "error",
+			Timestamp: time.Now(),
+		})
+		if err != nil {
+			log.Println(err)
+		}
+		return false
+	} else {
+		clients[clientID] = conn
+		log.Println("Added new client:", clientID)
+		return true
 	}
 }
 
