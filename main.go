@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"net/rpc"
-	"sync"
 	"time"
 )
 
@@ -167,23 +166,18 @@ func removeClient(clientID string) {
 }
 
 func main() {
-	var wg sync.WaitGroup
+	http.HandleFunc("/ws", handleConnections)
 
-	wg.Add(2)
+	log.Println("server listen in port 8080")
 
-	go func() {
-		test1()
-		wg.Done()
-	}()
-	go func() {
-		test2()
-		wg.Done() // Indique que test2 est terminé
-	}()
+	go handleHistoricMessage()
+	go handleChatMessages()
+	go forwardMessagesToRPC()
 
-	fmt.Println("zzsssqsqsqs")
-
-	// Attendre que toutes les goroutines aient terminé
-	wg.Wait()
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Fatal("error in listen server 8080", err)
+	}
 }
 
 func test1() {
