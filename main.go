@@ -134,6 +134,33 @@ func forwardMessagesToRPC() {
 	}
 }
 
+func readAllMessagesFromRPC(receiver string) {
+	client, err := rpc.DialHTTP("tcp", "localhost:1122")
+	if err != nil {
+		log.Println("Failed to connect to RPC server:", err)
+		return
+	}
+
+	defer client.Close()
+
+	var reply []shared.Message
+
+	args := struct {
+		Receiver string
+	}{
+		Receiver: receiver,
+	}
+
+	err = client.Call("MessageRPCServer.ReadAllMessages", args, &reply)
+	if err != nil {
+		log.Println("Failed to read message:", err)
+	}
+
+	for _, msg := range reply {
+		historical_broadcast <- msg
+	}
+}
+
 func removeClient(clientID string) {
 	delete(clients, clientID)
 	log.Printf("Client '%s' removed\n", clientID)
