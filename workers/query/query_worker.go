@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chatApp/shared"
 	"encoding/json"
 	"io/ioutil"
 	"log"
