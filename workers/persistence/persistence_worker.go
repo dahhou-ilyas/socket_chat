@@ -1,4 +1,4 @@
-package persistence
+package main
 
 import (
 	"chatApp/shared"

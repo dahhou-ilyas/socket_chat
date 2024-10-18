@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"bufio"
@@ -10,16 +10,15 @@ import (
 
 func main() {
 	u := "ws://localhost:8080/ws"
-	log.Printf("Connected to %s...\n", u)
+	log.Printf("Connected a %s...\n", u)
 
 	c, _, err := websocket.DefaultDialer.Dial(u, nil)
-
 	if err != nil {
-		log.Fatal("Erro in connection:", err)
+		log.Fatal("Error in connection:", err)
 	}
-
 	defer c.Close()
 
+	clientID := getClientIDFromInput()
 }
 
 func getClientIDFromInput() string {
