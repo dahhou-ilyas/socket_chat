@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"net"
+	"net/http"
+	"net/rpc"
 	"os"
 	"path/filepath"
 )
@@ -41,4 +44,19 @@ func (t *MessageRPCServer) ReadAllMessages(args struct{ Receiver string }, reply
 
 	*reply = messages
 	return nil
+}
+
+func main() {
+	messageRPC := new(MessageRPCServer)
+	rpc.Register(messageRPC)
+	rpc.HandleHTTP()
+	port := ":1122"
+
+	// listen for requests on 1122
+	listener, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatal("listen error: ", err)
+	}
+
+	http.Serve(listener, nil)
 }
